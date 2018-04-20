@@ -16,10 +16,11 @@ int ed25519_create_keypair(unsigned char *public_key, unsigned char *private_key
     return 0;
 }
 
-void ed25519_public_key(unsigned char *public_key, unsigned char *private_key)
+int ed25519_public_key(unsigned char *public_key, unsigned char *private_key)
 {
     ge_p3 A;
     ge_scalarmult_base(&A, private_key);
     ge_p3_tobytes(public_key, &A);
+    return 0;
 }
 

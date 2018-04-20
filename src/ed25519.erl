@@ -16,8 +16,8 @@ keypair() ->
 	"NIF library not loaded".
 
 -spec public_key(secret()) -> {ok, public()} | {error, atom()}.
-public_key(SecretKey) -> 
-	ed25519:public_key(SecretKey).
+public_key(_Secret) -> 
+	"NIF library not loaded".
 
 init() ->
 	SoName = case code:priv_dir(?APPNAME) of
