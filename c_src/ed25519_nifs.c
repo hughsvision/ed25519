@@ -1,9 +1,15 @@
+#define SIGNATURE_SIZE 64
+#define PUBLIC_KEY_SIZE 32
+#define SECRET_KEY_SIZE 32
+#define SEED_SIZE 32
 #include "ed25519.h"
 #include "erl_nif.h"
 #include "erl_nif_compat.h"
 // prototypes
 ERL_NIF_TERM ed25519_keypair(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ed25519_derive_public_key(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ed25519_sign_msg(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+//ERL_NIF_TERM ed25519_verify_sig(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 //ERL_NIF_TERM ed25519_update(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 //ERL_NIF_TERM ed25519_final(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 //ERL_NIF_TERM ed25519_hash(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
@@ -19,6 +25,8 @@ static ErlNifFunc nif_funcs[] =
 {
 	{"keypair", 0, ed25519_keypair},
 	{"public_key", 1, ed25519_derive_public_key},
+	{"sign", 2, ed25519_sign_msg},
+	//{"verify", 3, ed25519_verify_sig}
 };
 
 ERL_NIF_INIT(ed25519, nif_funcs, load, NULL, NULL, NULL)
@@ -49,16 +57,16 @@ ERL_NIF_TERM ed25519_keypair(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 	ErlNifBinary public;
 	ErlNifBinary seed;
 	// handle badarg
-		
-	if (!enif_alloc_binary(64, &secret)){
+
+	if (!enif_alloc_binary(SECRET_KEY_SIZE, &secret)){
 		return make_error_tuple(env, "alloc_secret_failed");
 	}
 
-	if (!enif_alloc_binary(32, &public)){
+	if (!enif_alloc_binary(PUBLIC_KEY_SIZE, &public)){
 		return make_error_tuple(env, "alloc_public_failed");
 	}
 
-	if (!enif_alloc_binary(32, &seed)){
+	if (!enif_alloc_binary(SEED_SIZE, &seed)){
 		return make_error_tuple(env, "alloc_seed_failed");
 	}
 
@@ -73,7 +81,7 @@ ERL_NIF_TERM ed25519_keypair(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 				enif_make_binary(env, &secret),
 				enif_make_binary(env, &public));
 	}
-	
+
 }
 
 ERL_NIF_TERM ed25519_derive_public_key(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
@@ -81,7 +89,7 @@ ERL_NIF_TERM ed25519_derive_public_key(ErlNifEnv* env, int argc, const ERL_NIF_T
 	ErlNifBinary secret;
 	ErlNifBinary public;
 	enif_inspect_binary(env, argv[0], &secret);	
-	if (!enif_alloc_binary(32, &public)){
+	if (!enif_alloc_binary(PUBLIC_KEY_SIZE, &public)){
 		return make_error_tuple(env, "alloc_public_failed");
 	}
 	int result = ed25519_public_key(public.data,secret.data);
@@ -92,13 +100,45 @@ ERL_NIF_TERM ed25519_derive_public_key(ErlNifEnv* env, int argc, const ERL_NIF_T
 				enif_make_atom(env, "ok"), 
 				enif_make_binary(env, &public));
 	}
-	
+
 
 }
 
+
+ERL_NIF_TERM ed25519_sign_msg(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+	ErlNifBinary signature;
+	ErlNifBinary message;
+	ErlNifBinary secret;
+	unsigned char public[PUBLIC_KEY_SIZE];
+
+	if((argc !=2)	|| (!enif_inspect_binary(env, argv[0], &message)) 
+			|| (!enif_inspect_binary(env, argv[1], &secret))
+			|| (secret.size != SECRET_KEY_SIZE)) {
+		return enif_make_badarg(env);
+	}
+
+	if (ed25519_public_key(public, secret.data) != 0) {
+		return make_error_tuple(env, "ed25519_public_key_failed");
+	}
+
+	if (!enif_alloc_binary(SIGNATURE_SIZE, &signature)) {
+		return make_error_tuple(env, "signature_alloc_failed");
+	}
+	int result = ed25519_sign(signature.data, message.data, message.size, public, secret.data);
+	if(result!=0){
+        	return make_error_tuple(env, "ed25519_sign_msg_failed");
+	}else{
+		return enif_make_tuple2(env, 
+				enif_make_atom(env, "ok"), 
+				enif_make_binary(env, &signature));
+	}
+}
+
+
 ERL_NIF_TERM make_error_tuple(ErlNifEnv *env, char *error)
 {
-    return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, error));
+	return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, error));
 }
 
 

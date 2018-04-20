@@ -1,11 +1,13 @@
 -module(ed25519).
 
 -export([keypair/0,
-	 public_key/1]).
+	 public_key/1,
+	 sign/2]).
 
 -type signature() :: binary().
 -type secret() :: binary().
 -type public() :: binary().
+-type message() :: binary().
 -on_load(init/0).
 
 -define(APPNAME, ed25519).
@@ -18,6 +20,11 @@ keypair() ->
 -spec public_key(secret()) -> {ok, public()} | {error, atom()}.
 public_key(_Secret) -> 
 	"NIF library not loaded".
+
+-spec sign(message(), secret()) -> {ok, signature()}.
+sign(_Message, _Secret) ->
+	"NIF library not loaded".
+
 
 init() ->
 	SoName = case code:priv_dir(?APPNAME) of
