@@ -2,7 +2,8 @@
 
 -export([keypair/0,
 	 public_key/1,
-	 sign/2]).
+	 sign/2,
+	 verify/3]).
 
 -type signature() :: binary().
 -type secret() :: binary().
@@ -24,6 +25,11 @@ public_key(_Secret) ->
 -spec sign(message(), secret()) -> {ok, signature()}.
 sign(_Message, _Secret) ->
 	"NIF library not loaded".
+
+-spec verify(signature(), message(), public()) -> {ok, atom()}.
+verify(_Signature, _Message, _Public) -> 
+	"NIF library not loaded".
+
 
 
 init() ->

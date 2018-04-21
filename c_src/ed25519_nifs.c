@@ -9,6 +9,7 @@
 ERL_NIF_TERM ed25519_keypair(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ed25519_derive_public_key(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM ed25519_sign_msg(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM ed25519_verify_sig(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 //ERL_NIF_TERM ed25519_verify_sig(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 //ERL_NIF_TERM ed25519_update(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 //ERL_NIF_TERM ed25519_final(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
@@ -26,7 +27,7 @@ static ErlNifFunc nif_funcs[] =
 	{"keypair", 0, ed25519_keypair},
 	{"public_key", 1, ed25519_derive_public_key},
 	{"sign", 2, ed25519_sign_msg},
-	//{"verify", 3, ed25519_verify_sig}
+	{"verify", 3, ed25519_verify_sig}
 };
 
 ERL_NIF_INIT(ed25519, nif_funcs, load, NULL, NULL, NULL)
@@ -135,6 +136,27 @@ ERL_NIF_TERM ed25519_sign_msg(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
 	}
 }
 
+ERL_NIF_TERM ed25519_verify_sig(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{	
+	ErlNifBinary signature;
+	ErlNifBinary message;
+	ErlNifBinary public;
+	if( argc != 3 || !enif_inspect_binary(env, argv[0], &signature)
+			|| !enif_inspect_binary(env, argv[1], &message)
+			|| !enif_inspect_binary(env, argv[2], &public)
+			|| signature.size != SIGNATURE_SIZE
+			|| public.size != PUBLIC_KEY_SIZE){
+		return enif_make_badarg(env);
+	}
+	int result = ed25519_verify(signature.data, message.data, message.size, public.data);
+	if(result == 1){
+		return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_atom(env, "true"));
+	}else if(result == 0){
+		return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_atom(env, "false"));
+	}else{
+		return make_error_tuple(env, "ed25519_verify_sig_failed");
+	}
+}
 
 ERL_NIF_TERM make_error_tuple(ErlNifEnv *env, char *error)
 {
