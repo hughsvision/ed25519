@@ -1,10 +1,12 @@
 -module(ed25519).
 
 -export([keypair/0,
+	 keypair/1,
 	 public_key/1,
 	 sign/2,
 	 verify/3]).
 
+-type seed() :: binary().
 -type signature() :: binary().
 -type secret() :: binary().
 -type public() :: binary().
@@ -16,6 +18,10 @@
 
 -spec keypair() -> {ok, secret(), public()} | {error, atom()}.
 keypair() ->
+	"NIF library not loaded".
+
+-spec keypair(seed()) -> {ok, secret(), public()} | {error, atom()}.
+keypair(_Seed) ->
 	"NIF library not loaded".
 
 -spec public_key(secret()) -> {ok, public()} | {error, atom()}.
