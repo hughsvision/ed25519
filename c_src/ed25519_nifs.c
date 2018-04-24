@@ -161,7 +161,7 @@ ERL_NIF_TERM ed25519_sign_msg(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[
 	if (!enif_alloc_binary(SIGNATURE_SIZE, &signature)) {
 		return make_error_tuple(env, "signature_alloc_failed");
 	}
-	int result = ed25519_sign(signature.data, message.data, message.size, public, secret.data);
+	int result = ed25519_sign(signature.data, message.data, message.size, secret.data);
 	if(result!=0){
         	return make_error_tuple(env, "ed25519_sign_msg_failed");
 	}else{

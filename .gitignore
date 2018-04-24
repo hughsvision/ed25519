@@ -1,4 +1,5 @@
 tags
 c_src/*.o
 src/ed25519.beam
+tmp
 _build
