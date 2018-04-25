@@ -1,6 +1,6 @@
 #define SIGNATURE_SIZE 64
 #define PUBLIC_KEY_SIZE 32
-#define SECRET_KEY_SIZE 32
+#define SECRET_KEY_SIZE 64
 #define SEED_SIZE 32
 #include "ed25519.h"
 #include "erl_nif.h"
