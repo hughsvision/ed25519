@@ -45,3 +45,61 @@ int ed25519_sign(unsigned char *signature, const unsigned char *message, size_t 
     sc_muladd(signature + 32, hram, expanded_secret_key, reduce);
     return 0;
 }
+
+int ed25519_bytom_sign(unsigned char *signature, const unsigned char *message, size_t message_len,  const unsigned char *private_key) {
+    unsigned char psk[32];
+    unsigned char ssk[32];
+    for( int j=0; j<32; j++) {
+        psk[j] = private_key[j];
+    }
+    for( int j=0; j<32; j++) {
+        ssk[j] = private_key[j + 32];
+    }
+
+    SHA512_HASH messageDigest;
+    SHA512_HASH hramDigest;
+
+    Sha512Context hash;
+    Sha512Initialise(&hash);
+    Sha512Update(&hash, ssk, 32);
+    Sha512Update(&hash, message, message_len);
+    Sha512Finalise(&hash, &messageDigest);
+
+    sc_reduce(messageDigest.bytes);
+    unsigned char messageDigestReduced[32];
+    for( int j=0; j<32; j++) {
+        messageDigestReduced[j] = messageDigest.bytes[j];
+    }
+
+    ge_p3 R;
+    ge_scalarmult_base(&R, messageDigestReduced);
+
+    unsigned char encodedR[32];
+    ge_p3_tobytes(encodedR, &R);
+
+    unsigned char public_key[32];  //private_key to publicKey
+    ed25519_public_key(public_key, private_key);
+    Sha512Initialise(&hash);
+    Sha512Update(&hash, encodedR, 32);
+    Sha512Update(&hash, public_key, 32);
+    Sha512Update(&hash, message, message_len);
+    Sha512Finalise(&hash, &hramDigest);
+
+    sc_reduce(hramDigest.bytes);
+    unsigned char hramDigestReduced[32];
+    for( int j=0; j<32; j++) {
+        hramDigestReduced[j] = hramDigest.bytes[j];
+    }
+
+    unsigned char s[32];
+    sc_muladd(s, hramDigestReduced, psk, messageDigestReduced);
+
+    for( int j=0; j<32; j++) {
+        signature[j] = encodedR[j];
+    }
+    for( int j=0; j<32; j++) {
+        signature[j + 32] = s[j];
+    }
+
+    return 0;
+}
