@@ -46,7 +46,7 @@ int ed25519_sign(unsigned char *signature, const unsigned char *message, size_t 
     return 0;
 }
 
-int ed25519_bytom_sign(unsigned char *signature, const unsigned char *message, size_t message_len,  const unsigned char *private_key) {
+int ed25519_sign_bytom(unsigned char *signature, const unsigned char *message, size_t message_len,  const unsigned char *private_key) {
     unsigned char psk[32];
     unsigned char ssk[32];
     for( int j=0; j<32; j++) {
