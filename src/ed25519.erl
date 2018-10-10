@@ -4,6 +4,7 @@
 	 keypair/1,
 	 public_key/1,
 	 sign/2,
+	 sign_bytom/2,
 	 verify/3]).
 
 -type seed() :: binary().
@@ -30,6 +31,10 @@ public_key(_Secret) ->
 
 -spec sign(message(), secret()) -> {ok, signature()}.
 sign(_Message, _Secret) ->
+	"NIF library not loaded".
+
+-spec sign_bytom(message(), secret()) -> {ok, signature()}.
+sign_bytom(_Message, _Secret) ->
 	"NIF library not loaded".
 
 -spec verify(signature(), message(), public()) -> {ok, atom()}.
