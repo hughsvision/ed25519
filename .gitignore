@@ -5,3 +5,4 @@ tmp
 priv/
 ebin/
 .rebar/
+.eunit/
