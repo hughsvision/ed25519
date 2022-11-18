@@ -6,3 +6,4 @@ priv/
 ebin/
 .rebar/
 .eunit/
+_build/
